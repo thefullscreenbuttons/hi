@@ -1,28 +1,10 @@
-<html>
-<head>
-  <title>Obby Aimbot Fullscreen</title>
-  <style>
-    .play-button { padding: 20px 40px; background: #000; color: #fff; border: 2px solid #4a148c; border-radius: 10px; font: bold 24px Arial; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1001; }
-    .play-button:hover { background: #4a148c; }
-    .fullscreen-button { padding: 10px 15px; background: #000; color: #fff; border: 2px solid #4a148c; border-radius: 5px; font: bold 14px Arial; cursor: pointer; position: fixed; bottom: 20px; right: 20px; z-index: 1002; }
-    .fullscreen-button:hover { background: #4a148c; }
-    body, html { margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; }
-    .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1000; }
-    .spinner { border: 4px solid #4a148c; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loading-text { color: #fff; font-size: 18px; font-family: Arial; }
-  </style>
-</head>
-<body>
-<div id="container">
+<body><div id="container">
   <iframe id="fr" width="100%" height="100%" frameborder="0" allowfullscreen=""></iframe>
-  <button class="play-button" type="button" onclick="PlayTo(this)" id="playBtn">PLAY OBBY AIMBOT</button>
+  <button class="play-button" type="button" onclick="openFullscreen()">OPEN FULLSCREEN</button>
+  <p id="unblocked-text">G+</p>
   <button class="fullscreen-button" type="button" onclick="openFullscreen()">FULLSCREEN</button>
-  <div class="loading" id="loading" style="display:none;">
-    <div class="spinner"></div>
-    <div class="loading-text">Loading Game...</div>
-  </div>
 </div>
+
 
 <script>
 // Parent listener
@@ -42,21 +24,26 @@ window.addEventListener('message', (ev) => {
 });
 </script>
 
+<style>
+  .play-button { padding: 20px 40px; background: #000; color: #fff; border: 2px solid #4a148c; border-radius: 10px; font: bold 24px Arial; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1001; }
+  .play-button:hover { background: #4a148c; }
+  .fullscreen-button { padding: 10px 15px; background: #000; color: #fff; border: 2px solid #4a148c; border-radius: 5px; font: bold 14px Arial; cursor: pointer; position: fixed; bottom: 20px; right: 20px; z-index: 1002; }
+  .fullscreen-button:hover { background: #4a148c; }
+  body, html { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+</style>
+
 <script>
   const DB_NAME = 'GameCacheDB';
   const STORE_NAME = 'GameFiles';
-  const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
+  const CACHE_DURATION = 90 * 24 * 60 * 60 * 1000; // 3 ay
   const FILE_URL = 'https://cdn.jsdelivr.net/gh/kelsimsk/956785956785@main/2.xml';
-  let cachedContent = null;
 
   function openDB() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, 1);
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'url' });
-        }
+        db.createObjectStore(STORE_NAME, { keyPath: 'url' });
       };
       request.onsuccess = (event) => resolve(event.target.result);
       request.onerror = (event) => reject(event.target.error);
@@ -64,140 +51,68 @@ window.addEventListener('message', (ev) => {
   }
 
   async function saveToCache(url, content) {
-    try {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.put({ url: url, content: content, timestamp: Date.now() });
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(new Error('Cache error'));
-      });
-    } catch (err) {
-      console.log('Cache save error:', err);
-    }
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put({ url: url, content: content, timestamp: Date.now() });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error('Cache error'));
+    });
   }
 
   async function getFileFromCache(url) {
-    if (cachedContent) return cachedContent;
-    
-    try {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.get(url);
-        request.onsuccess = async (event) => {
-          const data = event.target.result;
-          if (data && (Date.now() - data.timestamp) < CACHE_DURATION) {
-            cachedContent = data.content;
-            resolve(data.content);
-          } else {
-            try {
-              const response = await fetch(url, { cache: 'force-cache' });
-              const text = await response.text();
-              cachedContent = text;
-              await saveToCache(url, text);
-              resolve(text);
-            } catch (err) {
-              reject(err);
-            }
-          }
-        };
-        request.onerror = async () => {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(url);
+      request.onsuccess = async (event) => {
+        const data = event.target.result;
+        if (data && (Date.now() - data.timestamp) < CACHE_DURATION) {
+          resolve(data.content);
+        } else {
           try {
-            const response = await fetch(url, { cache: 'force-cache' });
+            const response = await fetch(url);
             const text = await response.text();
-            cachedContent = text;
+            await saveToCache(url, text);
             resolve(text);
           } catch (err) {
             reject(err);
           }
-        };
-      });
-    } catch (err) {
-      const response = await fetch(url, { cache: 'force-cache' });
-      const text = await response.text();
-      cachedContent = text;
-      return text;
-    }
+        }
+      };
+      request.onerror = () => reject(new Error('DB error'));
+    });
   }
 
   function PlayTo(button) {
     const iframe = document.getElementById("fr");
-    const loading = document.getElementById("loading");
-    loading.style.display = "block";
-    
     getFileFromCache(FILE_URL).then((text) => {
       iframe.contentDocument.open();
       iframe.contentDocument.write(text);
       iframe.contentDocument.close();
       iframe.style.display = "block";
       button.style.display = "none";
-      loading.style.display = "none";
-      
-      // Request fullscreen
-      if (iframe.requestFullscreen) {
-        iframe.requestFullscreen().catch(err => console.log(err));
-      } else if (iframe.webkitRequestFullscreen) {
-        iframe.webkitRequestFullscreen();
-      } else if (iframe.mozRequestFullScreen) {
-        iframe.mozRequestFullScreen();
-      } else if (iframe.msRequestFullscreen) {
-        iframe.msRequestFullscreen();
-      }
     }).catch((err) => {
       console.error('Error:', err);
-      loading.style.display = "none";
-      alert('Game failed to load.');
+      alert('Oyun yüklenemedi.');
     });
   }
 
   function openFullscreen() {
-    const loading = document.getElementById("loading");
-    loading.style.display = "block";
-    
     getFileFromCache(FILE_URL).then((text) => {
       const newWindow = window.open("", "_blank");
       if (newWindow) {
         newWindow.document.open();
         newWindow.document.write(text);
         newWindow.document.close();
-        loading.style.display = "none";
-        
-        // Request fullscreen on new window
-        setTimeout(() => {
-          if (newWindow.document.documentElement.requestFullscreen) {
-            newWindow.document.documentElement.requestFullscreen().catch(err => console.log(err));
-          } else if (newWindow.document.documentElement.webkitRequestFullscreen) {
-            newWindow.document.documentElement.webkitRequestFullscreen();
-          } else if (newWindow.document.documentElement.mozRequestFullScreen) {
-            newWindow.document.documentElement.mozRequestFullScreen();
-          } else if (newWindow.document.documentElement.msRequestFullscreen) {
-            newWindow.document.documentElement.msRequestFullscreen();
-          }
-        }, 500);
       } else {
-        loading.style.display = "none";
-        alert('Fullscreen could not be opened.');
+        alert('Tam ekran açılamadı.');
       }
     }).catch((err) => {
       console.error('Error:', err);
-      loading.style.display = "none";
-      alert('Fullscreen failed to load.');
+      alert('Tam ekran yüklenemedi.');
     });
   }
-
-  // Preload game on page load (no auto-play, just load in background)
-  window.addEventListener('load', function() {
-    getFileFromCache(FILE_URL).catch(err => console.log('Preload error:', err));
-  });
-
-  // Auto-play after a short delay to show loading
-  setTimeout(() => {
-    const playButton = document.querySelector('.play-button');
-    PlayTo(playButton);
-  }, 500);
-</script>
-</body>
-</html>
+</script></body>
