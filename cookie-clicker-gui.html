@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Clicker GUI</title>
+</head>
+<body>
+    <script>
+        (function () {
+            const gui = document.createElement("div");
+            gui.style = `
+                position:fixed;
+                top:20px;
+                right:20px;
+                width:220px;
+                background:#222;
+                color:white;
+                padding:10px;
+                border:2px solid #666;
+                z-index:999999;
+                font-family:Arial;
+                border-radius:8px;
+            `;
+
+            gui.innerHTML = `
+                <h3>🍪 Cookie Clicker GUI</h3>
+
+                <button id="cookies">+1 Quadrillion Cookies</button><br><br>
+                <button id="infinite">Infinite Cookies</button><br><br>
+                <button id="achievements">All Achievements</button><br><br>
+                <button id="upgrades">All Upgrades</button><br><br>
+                <button id="buildings">+1000 Buildings</button><br><br>
+                <button id="lvl10">Level 10 Buildings</button><br><br>
+                <button id="golden">Auto Golden Cookies</button><br><br>
+                <button id="autoclick">Ultra Auto Click</button><br><br>
+                <button id="lumps">Max Sugar Lumps</button><br><br>
+                <button id="prestige">+1 Billion Prestige</button><br><br>
+                <button id="wrinklers">Pop Wrinklers</button><br><br>
+                <button id="close">Close</button>
+            `;
+
+            document.body.appendChild(gui);
+
+            document.getElementById("cookies").onclick = () => {
+                Game.cookies += 1e15;
+            };
+
+            document.getElementById("infinite").onclick = () => {
+                setInterval(() => {
+                    Game.cookies = 1e300;
+                }, 100);
+            };
+
+            document.getElementById("achievements").onclick = () => {
+                Game.AchievementsById.forEach(a => Game.Win(a.name));
+            };
+
+            document.getElementById("upgrades").onclick = () => {
+                Game.UpgradesById.forEach(u => {
+                    u.unlock();
+                    if (!u.bought) u.buy();
+                });
+            };
+
+            document.getElementById("buildings").onclick = () => {
+                Game.ObjectsById.forEach(o => o.amount += 1000);
+            };
+
+            document.getElementById("lvl10").onclick = () => {
+                Game.ObjectsById.forEach(o => o.level = 10);
+            };
+
+            document.getElementById("golden").onclick = () => {
+                setInterval(() => {
+                    if (Game.shimmers.length > 0) {
+                        Game.shimmers.forEach(s => s.pop());
+                    }
+                }, 100);
+            };
+
+            document.getElementById("autoclick").onclick = () => {
+                setInterval(() => Game.ClickCookie(), 1);
+            };
+
+            document.getElementById("lumps").onclick = () => {
+                Game.lumps = 999999;
+            };
+
+            document.getElementById("prestige").onclick = () => {
+                Game.heavenlyChips += 1e9;
+            };
+
+            document.getElementById("wrinklers").onclick = () => {
+                Game.wrinklers.forEach(w => w.hp = 0);
+            };
+
+            document.getElementById("close").onclick = () => {
+                gui.remove();
+            };
+        })();
+    </script>
+</body>
+</html>
